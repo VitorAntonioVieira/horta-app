@@ -14,6 +14,7 @@ module.exports = {
         white: {
           DEFAULT: '#FFFFFF',
           100: '#eeeeee',
+          200: '#dddddd'
         }
       },
       fontFamily: {
