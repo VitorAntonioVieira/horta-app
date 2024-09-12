@@ -14,15 +14,13 @@ const CustomButton = ({
       activeOpacity={0.7}
       onPress={handlePress}
       className={`${
-        color.trim() != "" ? "bg-${color}" : "bg-secondary"
+        color.trim() != "" || color == null ? "bg-${color}" : "bg-secondary"
       } w-full rounded-[30px] h-[56px] flex flex-row justify-center items-center ${containerStyles} ${
         isLoading ? "opacity-50" : ""
       }`}
       disabled={isLoading}
     >
-      <Text className={`text-white text-[16px] font-psemibold ${textStyle}`}>
-        {title}
-      </Text>
+      <Text className={`text-[16px] font-psemibold ${textStyle}`}>{title}</Text>
       {isLoading && (
         <ActivityIndicator
           animating={isLoading}

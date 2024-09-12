@@ -1,39 +1,53 @@
 import { Ionicons } from "@expo/vector-icons";
-import React, { useEffect, useState } from "react";
-import { ActivityIndicator, Modal, View } from "react-native";
-import { TouchableOpacity } from "react-native-gesture-handler";
+import React, { useEffect } from "react";
+import {
+  ActivityIndicator,
+  Modal,
+  StatusBar,
+  TouchableOpacity,
+  View,
+} from "react-native";
 
 const CustomModal = ({
   type,
   handleVisibility,
+  setVisibility,
   isLoading,
   modalStyle,
   children,
 }) => {
-  const [visible, setVisibility] = useState(false);
+  // const [visible, setVisibility] = useState(handleVisibility);
 
   useEffect(() => {
     setVisibility(handleVisibility);
+    console.log(handleVisibility);
   }, [handleVisibility]);
 
   switch (type) {
     case "bottomSheet":
       return (
-        <Modal visible={visible} animationType="slide" transparent={true}>
-          <View className={"flex justify-center items-center bg-transparent"}>
+        <Modal
+          visible={handleVisibility}
+          animationType="slide"
+          transparent={true}
+        >
+          <StatusBar backgroundColor="rgba(0, 0, 0, 0.5)" />
+          <View
+            style={{ backgroundColor: "rgba(0, 0, 0, 0.5)" }}
+            className={`flex justify-end items-center h-full`}
+          >
             <View
-              className={`bg-white p-5 w-full h-[30%] rounded-t-xl ${modalStyle}`}
+              className={`flex justify-center items-center bg-white p-5 w-full max-h-[50%] rounded-[20px] ${modalStyle}`}
             >
-              <TouchableOpacity className={"flex flex-row self-end"}>
-                <Ionicons
-                  name="close"
-                  size={24}
-                  className={"bg-gray-400 rounded-[50%] text-gray-600"}
-                />
+              <TouchableOpacity
+                onPress={() => setVisibility(false)}
+                className={
+                  "mt-5 w-8 h-8 rounded-full bg-gray-200 flex flex-row self-end items-center justify-center"
+                }
+              >
+                <Ionicons name="close" size={24} className={"text-gray-600"} />
               </TouchableOpacity>
-              <View className={"border-t-gray-500 w-[80%] mt-10"}>
-                {children}
-              </View>
+              <View className={"w-full mt-3"}>{children}</View>
             </View>
           </View>
           {isLoading && (
@@ -48,7 +62,7 @@ const CustomModal = ({
       );
 
     default:
-      break;
+      return null;
   }
 };
 
