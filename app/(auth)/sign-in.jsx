@@ -1,12 +1,25 @@
 import { Link, router } from "expo-router";
 import React, { useState } from "react";
 import { Image, SafeAreaView, ScrollView, Text, View } from "react-native";
+import { getAuth, signInWithEmailAndPassword } from "firebase/auth";
 import { CustomButton, CustomTextInput } from "../../components";
+import app from "../../lib/firebase";
 import { images } from "../../constants";
 
 const SignIn = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+
+  const tryLogIn = () => {
+    const auth = getAuth(app);
+    signInWithEmailAndPassword(auth, email, password)
+      .then(() => {
+        router.navigate('/(drawer)/index')
+      })
+      .catch(error => {
+        console.error('Login failed:', error);
+      });
+  };
 
   return (
     <SafeAreaView className="bg-primary h-full">
@@ -51,8 +64,7 @@ const SignIn = () => {
               title={"Entrar"}
               textStyle={"text-white"}
               handlePress={() => {
-                // Implementar a função de login
-                console.log("Login");
+                tryLogIn();
               }}
               isLoading={false}
               containerStyles={"mt-[16px]"}

@@ -6,7 +6,9 @@ const DrawerLayout = () => {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <Drawer>
-        <Drawer.Screen />
+        <Drawer.Screen name="(drawer)/index" >
+        
+        </Drawer.Screen>
       </Drawer>
     </GestureHandlerRootView>
   );

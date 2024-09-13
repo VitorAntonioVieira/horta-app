@@ -1,8 +1,10 @@
 import React, { useState } from "react";
-import { Image, SafeAreaView, ScrollView, Text, View } from "react-native";
+import { Image, SafeAreaView, ScrollView, Text, View, Alert } from "react-native";
 import { CustomButton, CustomTextInput } from "../../components";
 import { images } from "../../constants";
 import app from "../../lib/firebase";
+import { getFirestore, collection, addDoc } from "firebase/firestore";
+import { getAuth, createUserWithEmailAndPassword } from "firebase/auth";
 import { router } from "expo-router";
 
 const SignUp = () => {
@@ -16,7 +18,7 @@ const SignUp = () => {
       Alert.alert("Erro", "Por favor, preencha todos os campos.");
       return;
     }
-    
+
     const auth = getAuth(app);
 
     try {
@@ -102,8 +104,7 @@ const SignUp = () => {
               title={"Cadastrar"}
               textStyle={"text-white"}
               handlePress={() => {
-                  AdicionarClientes();
-                  router.navigate('./home')
+                AdicionarClientes();
               }}
               isLoading={false}
               containerStyles={"mt-[16px]"}
