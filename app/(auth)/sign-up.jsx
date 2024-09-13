@@ -2,12 +2,46 @@ import React, { useState } from "react";
 import { Image, SafeAreaView, ScrollView, Text, View } from "react-native";
 import { CustomButton, CustomTextInput } from "../../components";
 import { images } from "../../constants";
+import app from "../../lib/firebase";
+import { router } from "expo-router";
 
 const SignUp = () => {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [cep, setCEP] = useState("");
+
+  const AdicionarClientes = async () => {
+    if (!name || !email || !password || !cep) {
+      Alert.alert("Erro", "Por favor, preencha todos os campos.");
+      return;
+    }
+    
+    const auth = getAuth(app);
+
+    try {
+      // Crie o usuário no Firebase Authentication
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
+
+      // Após o usuário ser criado, salve os dados adicionais no Firestore
+      const db = getFirestore(app);
+      const clientesCollection = collection(db, "clientes");
+
+      await addDoc(clientesCollection, {
+        uid: user.uid, // Salve o ID do usuário autenticado
+        nome: name,
+        email: email,
+        cidade: cep,
+      });
+
+      Alert.alert("Sucesso", "Usuário cadastrado com sucesso!");
+      navigation.goBack();
+    } catch (error) {
+      console.error("Erro ao adicionar usuário", error);
+      Alert.alert("Erro", "Ocorreu um erro ao adicionar o usuário");
+    }
+  };
 
   return (
     <SafeAreaView className="bg-primary h-full">
@@ -39,7 +73,7 @@ const SignUp = () => {
             <CustomTextInput
               placeholder={"Email"}
               icon={"mail"}
-              secureTextEntry={true}
+              secureTextEntry={false}
               conatinerStyle={"mt-[16px]"}
               onChangeText={(text) => {
                 setEmail(text);
@@ -57,7 +91,7 @@ const SignUp = () => {
             <CustomTextInput
               placeholder={"CEP"}
               icon={"location-sharp"}
-              secureTextEntry={true}
+              secureTextEntry={false}
               conatinerStyle={"mt-[16px]"}
               onChangeText={(text) => {
                 setCEP(text);
@@ -65,11 +99,11 @@ const SignUp = () => {
             />
             <CustomButton
               color={""}
-              title={"Entrar"}
+              title={"Cadastrar"}
               textStyle={"text-white"}
               handlePress={() => {
-                // Implementar a função de login
-                console.log("Login");
+                  AdicionarClientes();
+                  router.navigate('./home')
               }}
               isLoading={false}
               containerStyles={"mt-[16px]"}

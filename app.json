@@ -8,7 +8,7 @@
     "scheme": "HortaConnect",
     "userInterfaceStyle": "automatic",
     "splash": {
-      "image": "./assets/images/splash.png",
+      "image": "./assets/images/splashLogo.png",
       "resizeMode": "contain",
       "backgroundColor": "#35992B"
     },
