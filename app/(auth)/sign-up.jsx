@@ -36,7 +36,7 @@ const SignUp = () => {
       });
 
       Alert.alert("Sucesso", "Usuário cadastrado com sucesso!");
-      navigation.goBack();
+      router.back();
     } catch (error) {
       console.error("Erro ao adicionar usuário", error);
       Alert.alert("Erro", "Ocorreu um erro ao adicionar o usuário");
