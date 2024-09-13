@@ -1,12 +1,15 @@
-import { View, Text } from 'react-native'
-import React from 'react'
+import { Drawer } from "expo-router/drawer";
+import React from "react";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
 
 const DrawerLayout = () => {
   return (
-    <View>
-      <Text>DrawerLayout</Text>
-    </View>
-  )
-}
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <Drawer>
+        <Drawer.Screen />
+      </Drawer>
+    </GestureHandlerRootView>
+  );
+};
 
-export default DrawerLayout
+export default DrawerLayout;
