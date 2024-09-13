@@ -14,7 +14,7 @@ const SignIn = () => {
     const auth = getAuth(app);
     signInWithEmailAndPassword(auth, email, password)
       .then(() => {
-        router.navigate('/(drawer)/index')
+        router.navigate('/(drawer)')
       })
       .catch(error => {
         console.error('Login failed:', error);
