@@ -7,6 +7,8 @@ const CustomTextInput = ({
   value,
   conatinerStyle,
   onChangeText,
+  onFocus,
+  onBlur,
   icon,
   iconStyle,
   secureTextEntry,
@@ -32,8 +34,8 @@ const CustomTextInput = ({
         placeholderTextColor={"#9ca3af"}
         value={value}
         onChangeText={onChangeText}
-        onFocus={() => setFocus(true)}
-        onBlur={() => setFocus(false)}
+        onFocus={() => {setFocus(true); onFocus}}
+        onBlur={() => {setFocus(false); onBlur}}
         secureTextEntry={secureTextEntry}
         className={`${icon ? "ml-[10px]" : ""} text-[16px] w-full`}
       />

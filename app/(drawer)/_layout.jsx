@@ -5,11 +5,15 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 const DrawerLayout = () => {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-      <Drawer>
+      <Drawer
+      screenOptions={{
+        headerShown: false,
+      }}
+      >
         <Drawer.Screen name="(top-tabs)" />
         {/* <Drawer.Screen name="market" />
         <Drawer.Screen name="analysis" /> */}
-        <Drawer.Screen name="./perfil" />
+        <Drawer.Screen name="perfil" />
       </Drawer>
     </GestureHandlerRootView>
   );

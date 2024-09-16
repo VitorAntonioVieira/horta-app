@@ -14,7 +14,7 @@ const SignIn = () => {
     const auth = getAuth(app);
     signInWithEmailAndPassword(auth, email, password)
       .then(() => {
-        router.navigate("/(drawer)");
+        router.navigate("/(drawer)/perfil");
       })
       .catch((error) => {
         console.error("Login failed:", error);
@@ -25,15 +25,15 @@ const SignIn = () => {
 
   return (
     <SafeAreaView className="bg-primary h-full">
+      <Image
+        source={images.logo}
+        className="self-center relative top-[11%] w-[200px] h-[180px]"
+      />
       <ScrollView
         contentContainerStyle={{
-          height: "100%",
+          height: "110%",
         }}
       >
-        <Image
-          source={images.logo}
-          className="self-center relative top-[11%] w-[200px] h-[180px]"
-        />
         <View className="flex items-center justify-end h-full">
           <View className="flex items-center h-[82%] w-full p-8 bg-white rounded-t-[20px]">
             <Text className="text-black-100 text-[26px] font-pbold self-start">

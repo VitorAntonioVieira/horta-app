@@ -1,7 +1,8 @@
 import { useNavigation } from "@react-navigation/native";
-import { router } from "expo-router";
+import { router, useFocusEffect } from "expo-router";
+import { collection, getFirestore } from "firebase/firestore";
 import { getAuth } from "firebase/auth";
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import {
   Image,
   Modal,
@@ -20,7 +21,11 @@ const Perfil = () => {
   const [showAccountInfo, setShowAccountInfo] = useState(false); // Estado para mostrar/ocultar informações da conta
   const [showHelpModal, setShowHelpModal] = useState(false); // Estado para mostrar/ocultar modal de ajuda
   const navigation = useNavigation();
+  const db = getFirestore(app)
   const auth = getAuth(app);
+
+  const usersRef = collection(db, 'clientes');
+  const userInfo = {};
 
   useEffect(() => {
     const currentUser = auth.currentUser;
@@ -28,6 +33,18 @@ const Perfil = () => {
       setUser(currentUser);
     }
   }, []);
+
+  useFocusEffect(
+    useCallback(async () => {const snapshot = await citiesRef.where('capital', '==', true).get();
+      if (snapshot.empty) {
+        console.log('No matching documents.');
+        return;
+      }  
+      
+      snapshot.forEach(doc => {
+        userInfo = doc.id, '=>', doc.data();
+      });})
+  )
 
   const logout = () => {
     auth
@@ -45,7 +62,8 @@ const Perfil = () => {
       {/* Cabeçalho verde */}
       <View style={styles.header}>
         <View style={styles.headerIcons}>
-          <Icon name="bars" size={24} color="#fff" />
+          <Icon name="bars" size={24} color="#fff" onPress={() => {navigation.openDrawer()
+          }} />
           <Icon name="question-circle" size={24} color="#fff" />
         </View>
       </View>
@@ -67,7 +85,7 @@ const Perfil = () => {
           />
           <View style={styles.userInfoContainer}>
             <Text style={styles.userName}>
-              {user?.displayName || "Usuário"}
+              {userInfo.nome || "Usuário"}
             </Text>
             <Text style={styles.userEmail}>
               {user?.email || "user@gmail.com"}
@@ -92,7 +110,7 @@ const Perfil = () => {
           {showAccountInfo && (
             <View style={styles.accountInfoContainer}>
               <Text style={styles.accountInfoText}>
-                Nome: {user?.nome || "Não disponível"}
+                Nome: {userInfo.nome || "Não disponível"}
               </Text>
               <Text style={styles.accountInfoText}>
                 Email: {user?.email || "Não disponível"}
