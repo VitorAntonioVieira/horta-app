@@ -1,10 +1,35 @@
+import { router } from "expo-router";
+import { getAuth, sendPasswordResetEmail } from "firebase/auth";
 import React, { useState } from "react";
-import { Image, SafeAreaView, ScrollView, Text, View } from "react-native";
+import {
+  Alert,
+  Image,
+  SafeAreaView,
+  ScrollView,
+  Text,
+  View,
+} from "react-native";
 import { CustomButton, CustomTextInput } from "../../components";
 import { images } from "../../constants";
+import app from "../../lib/firebase";
 
 const ForgotPassword = () => {
   const [email, setEmail] = useState("");
+
+  const handleForgotPassword = () => {
+    const auth = getAuth(app);
+    console.log("entrei");
+    sendPasswordResetEmail(auth, email)
+      .then(() => {
+        Alert.alert(
+          "Email de redefinição de senha enviado! Verifique sua caixa de email."
+        );
+        router.navigate("./sign-in");
+      })
+      .catch((error) => {
+        alert(error.message);
+      });
+  };
 
   return (
     <SafeAreaView className="bg-primary h-full">
@@ -36,12 +61,9 @@ const ForgotPassword = () => {
             />
             <CustomButton
               color={""}
-              title={"Entrar"}
+              title={"Enviar"}
               textStyle={"text-white"}
-              handlePress={() => {
-                // Implementar a função de login
-                console.log("Login");
-              }}
+              handlePress={() => handleForgotPassword()}
               isLoading={false}
               containerStyles={"mt-[16px]"}
             />

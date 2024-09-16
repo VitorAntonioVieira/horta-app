@@ -1,10 +1,10 @@
 import { Link, router } from "expo-router";
+import { getAuth, signInWithEmailAndPassword } from "firebase/auth";
 import React, { useState } from "react";
 import { Image, SafeAreaView, ScrollView, Text, View } from "react-native";
-import { getAuth, signInWithEmailAndPassword } from "firebase/auth";
 import { CustomButton, CustomTextInput } from "../../components";
-import app from "../../lib/firebase";
 import { images } from "../../constants";
+import app from "../../lib/firebase";
 
 const SignIn = () => {
   const [email, setEmail] = useState("");
@@ -14,11 +14,13 @@ const SignIn = () => {
     const auth = getAuth(app);
     signInWithEmailAndPassword(auth, email, password)
       .then(() => {
-        router.navigate('/(drawer)')
+        router.navigate("/(drawer)");
       })
-      .catch(error => {
-        console.error('Login failed:', error);
+      .catch((error) => {
+        console.error("Login failed:", error);
       });
+    setEmail("");
+    setPassword("");
   };
 
   return (
