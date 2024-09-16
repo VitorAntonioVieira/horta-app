@@ -1,6 +1,5 @@
-import { useNavigation } from "@react-navigation/native";
 import { router } from "expo-router";
-import { getAuth } from "firebase/auth";
+import { getAuth, deleteUser } from "firebase/auth"; // Importa a função para deletar o usuário
 import React, { useEffect, useState } from "react";
 import {
   Image,
@@ -11,6 +10,7 @@ import {
   Text,
   TouchableOpacity,
   View,
+  TextInput,
 } from "react-native";
 import Icon from "react-native-vector-icons/FontAwesome";
 import app from "../../lib/firebase";
@@ -19,7 +19,11 @@ const Perfil = () => {
   const [user, setUser] = useState(null);
   const [showAccountInfo, setShowAccountInfo] = useState(false); // Estado para mostrar/ocultar informações da conta
   const [showHelpModal, setShowHelpModal] = useState(false); // Estado para mostrar/ocultar modal de ajuda
-  const navigation = useNavigation();
+  const [showDeleteModal, setShowDeleteModal] = useState(false); // Estado para mostrar/ocultar modal de confirmação de deletar conta
+  const [showChatModal, setShowChatModal] = useState(false); // Estado para mostrar/ocultar modal de chat
+  const [chatMessage, setChatMessage] = useState(""); // Estado para armazenar a mensagem do chat
+  const [chatHistory, setChatHistory] = useState([]); // Histórico de mensagens do chat
+
   const auth = getAuth(app);
 
   useEffect(() => {
@@ -40,13 +44,37 @@ const Perfil = () => {
       });
   };
 
+  const confirmDeleteAccount = () => {
+    const currentUser = auth.currentUser;
+
+    if (currentUser) {
+      deleteUser(currentUser)
+        .then(() => {
+          console.log("Conta deletada com sucesso");
+          router.replace("/(auth)/sign-in"); // Redireciona para a página de login após deletar a conta
+        })
+        .catch((error) => {
+          console.log("Erro ao deletar a conta:", error);
+        });
+    }
+  };
+
+  const sendMessage = () => {
+    if (chatMessage.trim()) {
+      setChatHistory([...chatHistory, { id: Date.now(), message: chatMessage }]);
+      setChatMessage(""); // Limpa o campo de mensagem após o envio
+    }
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       {/* Cabeçalho verde */}
       <View style={styles.header}>
         <View style={styles.headerIcons}>
           <Icon name="bars" size={24} color="#fff" />
-          <Icon name="question-circle" size={24} color="#fff" />
+          <TouchableOpacity onPress={() => setShowChatModal(true)}>
+            <Icon name="comments" size={24} color="#fff" />
+          </TouchableOpacity>
         </View>
       </View>
 
@@ -66,12 +94,8 @@ const Perfil = () => {
             style={styles.profileImage}
           />
           <View style={styles.userInfoContainer}>
-            <Text style={styles.userName}>
-              {user?.displayName || "Usuário"}
-            </Text>
-            <Text style={styles.userEmail}>
-              {user?.email || "user@gmail.com"}
-            </Text>
+            <Text style={styles.userName}>{user?.displayName || "Usuário"}</Text>
+            <Text style={styles.userEmail}>{user?.email || "user@gmail.com"}</Text>
           </View>
         </View>
 
@@ -92,35 +116,54 @@ const Perfil = () => {
           {showAccountInfo && (
             <View style={styles.accountInfoContainer}>
               <Text style={styles.accountInfoText}>
-                Nome: {user?.nome || "Não disponível"}
+                Nome: {user?.displayName || "Não disponível"}
               </Text>
-              <Text style={styles.accountInfoText}>
-                Email: {user?.email || "Não disponível"}
-              </Text>
-              {/* Adicione mais informações conforme necessário */}
+              <TouchableOpacity onPress={() => setShowHelpModal(true)}>
+                <Text
+                  style={[
+                    styles.accountInfoText,
+               
+                  ]}
+                >
+                  Email: {user?.email || "Não disponível"}
+                </Text>
+              </TouchableOpacity>
+
+              {/* Frase clicável para deletar conta */}
+              <TouchableOpacity onPress={() => setShowDeleteModal(true)}>
+                <Text
+                  style={[
+                    styles.accountInfoText,
+                    { color: "red", textDecorationLine: "underline", marginTop: 10 },
+                  ]}
+                >
+                  Deseja deletar essa conta?
+                </Text>
+              </TouchableOpacity>
             </View>
           )}
-
-          <TouchableOpacity
-            style={styles.option}
-            onPress={() => setShowHelpModal(true)} // Mostra o modal de ajuda
-          >
-            <Text style={styles.optionText}>Ajuda e suporte</Text>
-            <Icon name="chevron-right" size={20} color="#000" />
-          </TouchableOpacity>
-
-          <TouchableOpacity style={styles.option}>
-            <Text style={styles.optionText}>Termos e condições</Text>
-            <Icon name="chevron-right" size={20} color="#000" />
-          </TouchableOpacity>
-
-          <TouchableOpacity onPress={logout} style={styles.option}>
-            <Text style={[styles.optionText, styles.logoutText]}>
-              Sair da conta
-            </Text>
-            <Icon name="chevron-right" size={20} color="#000" />
-          </TouchableOpacity>
         </View>
+
+        <TouchableOpacity
+          style={styles.option}
+          onPress={() => setShowHelpModal(true)} // Mostra o modal de ajuda
+        >
+          <Text style={styles.optionText}>Ajuda e suporte</Text>
+          <Icon name="chevron-right" size={20} color="#000" />
+        </TouchableOpacity>
+
+        <TouchableOpacity style={styles.option}>
+          <Text style={styles.optionText}>Termos e condições</Text>
+          <Icon name="chevron-right" size={20} color="#000" />
+        </TouchableOpacity>
+
+        <TouchableOpacity onPress={logout} style={styles.option}>
+          <Text style={[styles.optionText, styles.logoutText]}>Sair da conta</Text>
+          <Icon name="chevron-right" size={20} color="#000" />
+        </TouchableOpacity>
+
+        {/* Link para deletar conta */}
+       
       </ScrollView>
 
       {/* Modal de Ajuda e Suporte */}
@@ -133,20 +176,11 @@ const Perfil = () => {
         <View style={styles.modalContainer}>
           <View style={styles.modalContent}>
             <Text style={styles.modalTitle}>Ajuda e Suporte</Text>
-            <Text style={styles.modalText}>
-              Estamos aqui para ajudar! Se você tiver qualquer dúvida, precisar
-              de suporte ou desejar fornecer feedback, entre em contato pelo
-              email:
-            </Text>
-            <Text style={[styles.modalText, styles.emailText]}>
-              hortaconnect@gmail.com
-            </Text>
-            <Text style={styles.modalText}>
-              Você pode nos seguir em nossas redes sociais para ficar por dentro
-              das últimas atualizações e novidades.
-              {"\n\n"}
-              Sua satisfação é a nossa prioridade, e estamos prontos para ajudar
-              no que for necessário!
+            <Text style={styles.modalText}> Estamos aqui para ajudar! Se você tiver alguma dúvida, solicite suporte ou forneça feedback, entre em contato pelo email: </Text>
+            <Text style={[styles.modalText, styles.emailText]}> hortaconnect@gmail.com </Text> 
+            < Text style={styles.modalText}> 
+             Você pode nos seguir em nossas redes sociais para ficar por dentro das últimas atualizações e novidades.
+              {"\n\n"} Sua satisfação é nossa prioridade, e estamos prontos para ajudar no que for necessário!
             </Text>
             <TouchableOpacity
               style={styles.closeButton}
@@ -157,6 +191,78 @@ const Perfil = () => {
           </View>
         </View>
       </Modal>
+
+      {/* Modal de Confirmação para Deletar Conta */}
+      <Modal
+        visible={showDeleteModal}
+        transparent={true}
+        animationType="slide"
+        onRequestClose={() => setShowDeleteModal(false)}
+      >
+        <View style={styles.modalContainer}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Deletar Conta</Text>
+            <Text style={styles.modalText}>
+              Tem certeza que deseja deletar sua conta? Essa ação não pode ser desfeita.
+            </Text>
+            <View style={styles.buttonRow}>
+              <TouchableOpacity
+                style={[styles.closeButton, styles.cancelButton]}
+                onPress={() => setShowDeleteModal(false)}
+              >
+                <Text style={styles.closeButtonText}>Cancelar</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.deleteButton}
+                onPress={confirmDeleteAccount} // Chama a função para deletar a conta
+              >
+                <Text style={styles.deleteButtonText}>Deletar</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Modal de Chat */}
+      <Modal
+        visible={showChatModal}
+        transparent={true}
+        animationType="slide"
+        onRequestClose={() => setShowChatModal(false)}
+      >
+        <View style={styles.modalContainer}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Chat</Text>
+            <ScrollView style={styles.chatContainer}>
+              {chatHistory.map((chat) => (
+                <Text key={chat.id} style={styles.chatMessage}>
+                  {chat.message}
+                </Text>
+              ))}
+            </ScrollView>
+            <TextInput
+              style={styles.chatInput}
+              placeholder="Digite sua mensagem..."
+              value={chatMessage}
+              onChangeText={setChatMessage}
+            />
+            <View style={styles.buttonRow}>
+              <TouchableOpacity
+                style={styles.sendButton}
+                onPress={sendMessage} // Envia a mensagem ao chat
+              >
+                <Text style={styles.sendButtonText}>Enviar</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.closeButton}
+                onPress={() => setShowChatModal(false)}
+              >
+                <Text style={styles.closeButtonText}>Fechar</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 };
@@ -164,142 +270,174 @@ const Perfil = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#fff",
+    backgroundColor: "#F5F5F5",
   },
   header: {
-    backgroundColor: "#35992B",
-    width: "100%",
-    height: 150, // Aumenta a altura do cabeçalho verde
-    borderBottomLeftRadius: 20,
-    borderBottomRightRadius: 20,
-    overflow: "hidden", // Garante que o borderRadius funcione corretamente
+    backgroundColor: "#4CAF50",
+    padding: 16,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
   },
   headerIcons: {
     flexDirection: "row",
     justifyContent: "space-between",
-    padding: 16,
-  },
-  titleContainer: {
-    backgroundColor: "#fff", // Parte branca
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    borderBottomLeftRadius: 20, // Adiciona o mesmo borderRadius da parte verde
-    borderBottomRightRadius: 20,
-    borderTopLeftRadius: 20, // Borda arredondada na parte superior
-    borderTopRightRadius: 20, // Borda arredondada na parte superior
-    marginTop: -50, // Ajuste para que sobreponha o cabeçalho verde
-    zIndex: 1, // Para garantir que a parte branca fique sobre a parte verde
+    width: 80,
   },
   headerTitle: {
-    color: "#000",
-    fontSize: 32,
+    fontSize: 24,
     fontWeight: "bold",
-    marginLeft: 20,
-    marginTop: 10,
-  },
-  scrollViewContent: {
-    paddingBottom: 40,
+    color: "#333",
+    textAlign: "center",
+    marginTop: 16,
   },
   profileContainer: {
-    alignItems: "center", // Alinha verticalmente no centro
-    marginTop: 30,
-    marginBottom: 40,
+    alignItems: "center",
+    marginVertical: 16,
   },
   profileImage: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    borderWidth: 4,
-    borderColor: "#fff",
-    marginBottom: 10, // Espaço entre a imagem e as informações
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    marginBottom: 16,
   },
   userInfoContainer: {
-    alignItems: "center", // Alinha verticalmente no centro
+    alignItems: "center",
   },
   userName: {
-    color: "#000",
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: "bold",
-    marginBottom: 5,
   },
   userEmail: {
-    color: "#000",
     fontSize: 16,
+    color: "#888",
   },
   optionsContainer: {
-    marginTop: 20,
+    marginTop: 16,
     paddingHorizontal: 16,
   },
   option: {
+    backgroundColor: "#FFF",
+    padding: 16,
+    borderRadius: 8,
     flexDirection: "row",
-    alignItems: "center",
     justifyContent: "space-between",
-    padding: 16,
-    backgroundColor: "#fff",
-    borderRadius: 10,
-    marginBottom: 10,
-    shadowColor: "#000",
-    shadowOpacity: 0.1,
-    shadowOffset: { width: 0, height: 2 },
-    shadowRadius: 5,
-    elevation: 3,
-  },
-  accountInfoContainer: {
-    padding: 16,
-    backgroundColor: "#f8f8f8",
-    borderRadius: 10,
-    marginBottom: 10,
-  },
-  accountInfoText: {
-    fontSize: 16,
-    color: "#000",
-    marginBottom: 5,
+    alignItems: "center",
+    marginBottom: 8,
+    borderWidth: 1,
+    borderColor: "#ddd",
   },
   optionText: {
-    fontSize: 18,
-    fontWeight: "500",
+    fontSize: 16,
+    fontWeight: "bold",
   },
   logoutText: {
     color: "red",
+  },
+  deleteText: {
+    color: "red",
+  },
+  accountInfoContainer: {
+    backgroundColor: "#FFF",
+    padding: 16,
+    borderRadius: 8,
+    marginTop: 8,
+    borderWidth: 1,
+    borderColor: "#ddd",
+  },
+  accountInfoText: {
+    fontSize: 14,
+    color: "#888",
+    marginBottom: 4,
+  },
+  scrollViewContent: {
+    padding: 16,
   },
   modalContainer: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "rgba(0, 0, 0, 0.5)", // Semi-transparente
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
   },
   modalContent: {
-    width: "80%",
-    backgroundColor: "#fff",
-    borderRadius: 10,
+    backgroundColor: "#FFF",
     padding: 20,
+    borderRadius: 10,
+    width: "80%",
     alignItems: "center",
   },
   modalTitle: {
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: "bold",
-    marginBottom: 10,
+    marginBottom: 16,
   },
   modalText: {
     fontSize: 16,
-    color: "#000",
-    textAlign: "justify", // Justifica o texto
-    marginBottom: 10,
-  },
-  emailText: {
-    fontWeight: "bold", // Destaca o e-mail
-    fontSize: 18, // Aumenta o tamanho da fonte do e-mail
+    marginBottom: 16,
+    textAlign: "center",
   },
   closeButton: {
-    marginTop: 20,
+    backgroundColor: "#4CAF50",
     padding: 10,
-    backgroundColor: "#35992B",
-    borderRadius: 5,
+    borderRadius: 8,
+    marginTop: 10,
   },
   closeButtonText: {
-    color: "#fff",
-    fontSize: 16,
+    color: "#FFF",
     fontWeight: "bold",
+    textAlign: "center",
+  },
+  cancelButton: {
+    backgroundColor: "gray",
+    marginRight: 10,
+  },
+  buttonRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    width: "100%",
+    marginTop: 10,
+  },
+  deleteButton: {
+    backgroundColor: "red",
+    padding: 10,
+    borderRadius: 8,
+  },
+  deleteButtonText: {
+    color: "#FFF",
+    fontWeight: "bold",
+    textAlign: "center",
+  },
+  chatContainer: {
+    maxHeight: 200,
+    width: "100%",
+    marginBottom: 10,
+  },
+  chatMessage: {
+    backgroundColor: "#f1f1f1",
+    padding: 10,
+    borderRadius: 8,
+    marginBottom: 5,
+    alignSelf: "flex-start",
+    maxWidth: "80%",
+  },
+  chatInput: {
+    borderWidth: 1,
+    borderColor: "#ddd",
+    padding: 10,
+    borderRadius: 8,
+    width: "100%",
+    marginBottom: 10,
+  },
+  sendButton: {
+    backgroundColor: "#4CAF50",
+    padding: 10,
+    borderRadius: 8,
+    marginRight: 10,
+  },
+  sendButtonText: {
+    color: "#FFF",
+    fontWeight: "bold",
+    textAlign: "center",
   },
 });
 

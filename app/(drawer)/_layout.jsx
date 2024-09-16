@@ -9,7 +9,7 @@ const DrawerLayout = () => {
         <Drawer.Screen name="(top-tabs)" />
         {/* <Drawer.Screen name="market" />
         <Drawer.Screen name="analysis" /> */}
-        <Drawer.Screen name="./perfil" />
+        <Drawer.Screen name="./perfil.jsx" />
       </Drawer>
     </GestureHandlerRootView>
   );
