@@ -1,26 +1,39 @@
 import React from "react";
 import { View, Text, TouchableOpacity, StyleSheet, Image } from "react-native";
+import { useNavigation } from "expo-router";
 import { images } from '../../constants'
 import Icon from "react-native-vector-icons/FontAwesome";
 
 const Home = () => {
+const navigation = useNavigation();
+
   return (
     <View style={styles.container}>
-      {/* Cabeçalho verde */}
       <View style={styles.header}>
-        {/* Abas com ícones */}
-        <View style={styles.tabsContainer}>
-          <TouchableOpacity style={styles.tab}>
-            <Icon name="home" size={24} color="#FFC107" />
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.tab}>
-            <Icon name="search" size={24} color="#FFC107" />
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.tab}>
-            <Icon name="book" size={24} color="#FFC107" />
+        <View style={styles.headerIcons}>
+          <Icon name="bars" size={24} color="#fff" onPress={() => {
+            navigation.openDrawer()
+          }} />
+          <Icon name="question-circle" size={24} color="#fff" />
+          <TouchableOpacity onPress={() => setShowChatModal(true)}>
+            <Icon name="comments" size={24} color="#fff" />
           </TouchableOpacity>
         </View>
       </View>
+      {/* Cabeçalho verde */}
+      {/* Abas com ícones */}
+      <View style={styles.tabsContainer}>
+        <TouchableOpacity style={styles.tab}>
+          <Icon name="home" size={24} color="#FFC107" />
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.tab}>
+          <Icon name="search" size={24} color="#FFC107" />
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.tab}>
+          <Icon name="book" size={24} color="#FFC107" />
+        </TouchableOpacity>
+      </View>
+
 
       {/* Saudação */}
       <View style={styles.titleContainer}>
@@ -73,11 +86,18 @@ const styles = StyleSheet.create({
   },
   header: {
     backgroundColor: "#35992B",
-    height: 120,
     justifyContent: "flex-end",
-    paddingBottom: 10,
+    padding: 20,
+    height: 120,
+    flexDirection: "row",
+    justifyContent: "space-between",
     alignItems: "center",
     position: "relative",
+  },
+  headerIcons: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    width: 80,
   },
   tabsContainer: {
     flexDirection: "row",

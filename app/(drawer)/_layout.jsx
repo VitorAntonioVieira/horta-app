@@ -8,12 +8,25 @@ const DrawerLayout = () => {
       <Drawer
       screenOptions={{
         headerShown: false,
+        drawerActiveTintColor: '#35992B'
       }}
       >
-        <Drawer.Screen name="(top-tabs)" />
-        {/* <Drawer.Screen name="market" />
-        <Drawer.Screen name="analysis" /> */}
-        <Drawer.Screen name="perfil" />
+        <Drawer.Screen name="(top-tabs)" options={{
+          drawerItemStyle: {
+            display: 'none'
+          }
+        }}/>
+        <Drawer.Screen name="mercado" options={{
+          drawerItemStyle: {
+            display: 'none'
+          }
+        }}/>
+        <Drawer.Screen name="perfil" options={{
+          title: 'Perfil',
+        }}/>
+        <Drawer.Screen name="index" options={{
+          title: 'Principal',
+        }}/>
       </Drawer>
     </GestureHandlerRootView>
   );

@@ -1,7 +1,7 @@
 import { useNavigation } from "@react-navigation/native";
 import { router, useFocusEffect } from "expo-router";
 import { collection, getFirestore } from "firebase/firestore";
-import { getAuth } from "firebase/auth";
+import { deleteUser, getAuth} from "firebase/auth";
 import React, { useCallback, useEffect, useState } from "react";
 import {
   Image,
@@ -64,10 +64,10 @@ const Perfil = () => {
   };
 
   const confirmDeleteAccount = () => {
-    const currentUser = auth.currentUser;
+    const user = auth.currentUser;
 
-    if (currentUser) {
-      deleteUser(currentUser)
+    if (user) {
+      deleteUser(user)
         .then(() => {
           console.log("Conta deletada com sucesso");
           router.replace("/(auth)/sign-in"); // Redireciona para a página de login após deletar a conta
@@ -291,11 +291,13 @@ const Perfil = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#F5F5F5",
+    backgroundColor: "#ffffff",
   },
   header: {
-    backgroundColor: "#4CAF50",
-    padding: 16,
+    backgroundColor: "#35992B",
+    padding: 20,
+    height: 120,
+    width: '100%',
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
@@ -303,7 +305,7 @@ const styles = StyleSheet.create({
   headerIcons: {
     flexDirection: "row",
     justifyContent: "space-between",
-    width: 80,
+    width: '100%',
   },
   headerTitle: {
     fontSize: 24,
@@ -347,6 +349,7 @@ const styles = StyleSheet.create({
     marginBottom: 8,
     borderWidth: 1,
     borderColor: "#ddd",
+    width: "100%",
   },
   optionText: {
     fontSize: 16,
@@ -363,6 +366,7 @@ const styles = StyleSheet.create({
     padding: 16,
     borderRadius: 8,
     marginTop: 8,
+    marginBottom: 20,
     borderWidth: 1,
     borderColor: "#ddd",
   },
