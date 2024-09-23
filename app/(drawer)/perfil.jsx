@@ -1,14 +1,8 @@
-<<<<<<< HEAD
 import { useNavigation } from "@react-navigation/native";
 import { router, useFocusEffect } from "expo-router";
 import { collection, getFirestore } from "firebase/firestore";
 import { getAuth } from "firebase/auth";
 import React, { useCallback, useEffect, useState } from "react";
-=======
-import { router } from "expo-router";
-import { getAuth, deleteUser } from "firebase/auth"; // Importa a função para deletar o usuário
-import React, { useEffect, useState } from "react";
->>>>>>> 70003e77a81c9292619035669e8da1410d524360
 import {
   Image,
   Modal,
@@ -96,16 +90,12 @@ const Perfil = () => {
       {/* Cabeçalho verde */}
       <View style={styles.header}>
         <View style={styles.headerIcons}>
-<<<<<<< HEAD
           <Icon name="bars" size={24} color="#fff" onPress={() => {navigation.openDrawer()
           }} />
           <Icon name="question-circle" size={24} color="#fff" />
-=======
-          <Icon name="bars" size={24} color="#fff" />
           <TouchableOpacity onPress={() => setShowChatModal(true)}>
             <Icon name="comments" size={24} color="#fff" />
           </TouchableOpacity>
->>>>>>> 70003e77a81c9292619035669e8da1410d524360
         </View>
       </View>
 
@@ -125,17 +115,8 @@ const Perfil = () => {
             style={styles.profileImage}
           />
           <View style={styles.userInfoContainer}>
-<<<<<<< HEAD
-            <Text style={styles.userName}>
-              {userInfo.nome || "Usuário"}
-            </Text>
-            <Text style={styles.userEmail}>
-              {user?.email || "user@gmail.com"}
-            </Text>
-=======
             <Text style={styles.userName}>{user?.displayName || "Usuário"}</Text>
             <Text style={styles.userEmail}>{user?.email || "user@gmail.com"}</Text>
->>>>>>> 70003e77a81c9292619035669e8da1410d524360
           </View>
         </View>
 
@@ -156,11 +137,7 @@ const Perfil = () => {
           {showAccountInfo && (
             <View style={styles.accountInfoContainer}>
               <Text style={styles.accountInfoText}>
-<<<<<<< HEAD
                 Nome: {userInfo.nome || "Não disponível"}
-=======
-                Nome: {user?.displayName || "Não disponível"}
->>>>>>> 70003e77a81c9292619035669e8da1410d524360
               </Text>
               <TouchableOpacity onPress={() => setShowHelpModal(true)}>
                 <Text
