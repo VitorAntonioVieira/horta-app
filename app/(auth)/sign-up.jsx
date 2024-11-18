@@ -6,6 +6,8 @@ import app from "../../lib/firebase";
 import { getFirestore, collection, addDoc } from "firebase/firestore";
 import { getAuth, createUserWithEmailAndPassword } from "firebase/auth";
 import { router } from "expo-router";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+ // Importando AsyncStorage
 
 const SignUp = () => {
   const [name, setName] = useState("");
@@ -23,20 +25,21 @@ const SignUp = () => {
     const auth = getAuth(app);
 
     try {
-      // Crie o usuário no Firebase Authentication
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
 
-      // Após o usuário ser criado, salve os dados adicionais no Firestore
       const db = getFirestore(app);
       const clientesCollection = collection(db, "clientes");
 
       await addDoc(clientesCollection, {
-        uid: user.uid, // Salve o ID do usuário autenticado
+        uid: user.uid,
         nome: name,
         email: email,
         cidade: cep,
       });
+
+      // Armazene o nome no AsyncStorage
+      await AsyncStorage.setItem("userName", name);
 
       Alert.alert("Sucesso", "Usuário cadastrado com sucesso!");
       router.back();
@@ -48,26 +51,16 @@ const SignUp = () => {
 
   return (
     <SafeAreaView className="bg-primary h-full">
-      <ScrollView
-        contentContainerStyle={{
-          padding: 0,
-          height: "100%",
-        }}
-      >
+      <ScrollView contentContainerStyle={{ padding: 0, height: "100%" }}>
         <Image
           source={images.logo}
-          className={focused ? 'hidden':'self-center relative top-[11%] w-[200px] h-[180px]'}
+          className={focused ? "hidden" : "self-center relative top-[11%] w-[200px] h-[180px]"}
         />
-        <KeyboardAvoidingView >
-
+        <KeyboardAvoidingView>
           <View className="flex items-center justify-end h-full">
             <View className="flex items-center h-[100%] w-full p-8 bg-white rounded-t-[20px]">
-              <Text className="text-black-100 text-[26px] font-pbold self-start">
-                Cadastre-se!
-              </Text>
-              <Text className="text-black-100 text-[18px] font-pregular self-start">
-                Insira suas credenciais
-              </Text>
+              <Text className="text-black-100 text-[26px] font-pbold self-start">Cadastre-se!</Text>
+              <Text className="text-black-100 text-[18px] font-pregular self-start">Insira suas credenciais</Text>
               <CustomTextInput
                 placeholder={"Nome completo"}
                 icon={"person"}
