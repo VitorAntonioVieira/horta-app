@@ -1,10 +1,10 @@
 {
   "expo": {
-    "name": "hortaconnect",
-    "slug": "hortaconnect",
+    "name": "HortaConnect",
+    "slug": "HortaConnect",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/icon.png",
+    "icon": "./assets/images/logo.png",
     "scheme": "HortaConnect",
     "userInterfaceStyle": "automatic",
     "splash": {
@@ -18,8 +18,9 @@
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
-      }
+        "backgroundColor": "#35992B"
+      },
+      "package": "com.vitorantonio.hortaconnect"
     },
     "web": {
       "bundler": "metro",
@@ -31,6 +32,15 @@
     ],
     "experiments": {
       "typedRoutes": true
-    }
+    },
+    "extra": {
+      "router": {
+        "origin": false
+      },
+      "eas": {
+        "projectId": "e602a5be-7bb4-4cf9-a67e-68542d84934e"
+      }
+    },
+    "newArchEnabled": true
   }
 }
