@@ -1,7 +1,13 @@
 import { useNavigation } from "@react-navigation/native";
 import { router, useFocusEffect } from "expo-router";
-import { collection, getFirestore } from "firebase/firestore";
-import { deleteUser, getAuth} from "firebase/auth";
+import {
+  collection,
+  getFirestore,
+  query,
+  where,
+  getDocs,
+} from "firebase/firestore";
+import { getAuth } from "firebase/auth";
 import React, { useCallback, useEffect, useState } from "react";
 import {
   Image,
@@ -16,41 +22,48 @@ import {
 } from "react-native";
 import Icon from "react-native-vector-icons/FontAwesome";
 import app from "../../lib/firebase";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const Perfil = () => {
   const [user, setUser] = useState(null);
-  const [showAccountInfo, setShowAccountInfo] = useState(false); // Estado para mostrar/ocultar informações da conta
-  const [showHelpModal, setShowHelpModal] = useState(false); // Estado para mostrar/ocultar modal de ajuda
+  const [showHelpModal, setShowHelpModal] = useState(false);
+  const [showAccountModal, setShowAccountModal] = useState(false);
+  const [userInfo, setUserInfo] = useState({});
+  const [storedName, setStoredName] = useState(null);
   const navigation = useNavigation();
-  const db = getFirestore(app)
-  const [showDeleteModal, setShowDeleteModal] = useState(false); // Estado para mostrar/ocultar modal de confirmação de deletar conta
-  const [showChatModal, setShowChatModal] = useState(false); // Estado para mostrar/ocultar modal de chat
-  const [chatMessage, setChatMessage] = useState(""); // Estado para armazenar a mensagem do chat
-  const [chatHistory, setChatHistory] = useState([]); // Histórico de mensagens do chat
-
+  const db = getFirestore(app);
   const auth = getAuth(app);
-
-  const usersRef = collection(db, 'clientes');
-  const userInfo = {};
 
   useEffect(() => {
     const currentUser = auth.currentUser;
     if (currentUser) {
       setUser(currentUser);
     }
+
+    const getUserName = async () => {
+      const name = await AsyncStorage.getItem("userName");
+      setStoredName(name);
+    };
+
+    getUserName();
   }, []);
 
   useFocusEffect(
-    useCallback(async () => {const snapshot = await citiesRef.where('capital', '==', true).get();
-      if (snapshot.empty) {
-        console.log('No matching documents.');
-        return;
-      }  
-      
-      snapshot.forEach(doc => {
-        userInfo = doc.id, '=>', doc.data();
-      });})
-  )
+    useCallback(() => {
+      const fetchUserInfo = async () => {
+        if (!user) return;
+        const usersRef = collection(db, "usuarios");
+        const q = query(usersRef, where("email", "==", user.email));
+        const querySnapshot = await getDocs(q);
+        if (!querySnapshot.empty) {
+          const userData = querySnapshot.docs[0].data();
+          setUserInfo(userData);
+        }
+      };
+
+      fetchUserInfo();
+    }, [user])
+  );
 
   const logout = () => {
     auth
@@ -63,131 +76,60 @@ const Perfil = () => {
       });
   };
 
-  const confirmDeleteAccount = () => {
-    const user = auth.currentUser;
-
-    if (user) {
-      deleteUser(user)
-        .then(() => {
-          console.log("Conta deletada com sucesso");
-          router.replace("/(auth)/sign-in"); // Redireciona para a página de login após deletar a conta
-        })
-        .catch((error) => {
-          console.log("Erro ao deletar a conta:", error);
-        });
-    }
-  };
-
-  const sendMessage = () => {
-    if (chatMessage.trim()) {
-      setChatHistory([...chatHistory, { id: Date.now(), message: chatMessage }]);
-      setChatMessage(""); // Limpa o campo de mensagem após o envio
-    }
+  const maskPassword = (password) => {
+    if (!password || password.length < 2) return "Senha inválida";
+    const visibleDigits = password.slice(-2);
+    const maskedPart = "*".repeat(password.length - 2);
+    return maskedPart + visibleDigits;
   };
 
   return (
     <SafeAreaView style={styles.container}>
-      {/* Cabeçalho verde */}
       <View style={styles.header}>
         <View style={styles.headerIcons}>
-          <Icon name="bars" size={24} color="#fff" onPress={() => {navigation.openDrawer()
-          }} />
+          <Icon
+            name="bars"
+            size={24}
+            color="#fff"
+            onPress={() => navigation.openDrawer()}
+          />
           <Icon name="question-circle" size={24} color="#fff" />
-          <TouchableOpacity onPress={() => setShowChatModal(true)}>
-            <Icon name="comments" size={24} color="#fff" />
-          </TouchableOpacity>
         </View>
       </View>
-
-      {/* Título "Perfil" na parte branca */}
-      <View style={styles.titleContainer}>
-        <Text style={styles.headerTitle}>Perfil</Text>
-      </View>
-
-      {/* Conteúdo rolável */}
       <ScrollView contentContainerStyle={styles.scrollViewContent}>
-        {/* Imagem e detalhes do perfil, empilhados verticalmente */}
         <View style={styles.profileContainer}>
           <Image
             source={{
               uri: "https://upload.wikimedia.org/wikipedia/commons/9/99/Sample_User_Icon.png",
-            }} // Substitua pela URL da imagem desejada
+            }}
             style={styles.profileImage}
           />
           <View style={styles.userInfoContainer}>
-            <Text style={styles.userName}>{user?.displayName || "Usuário"}</Text>
-            <Text style={styles.userEmail}>{user?.email || "user@gmail.com"}</Text>
+            <Text style={styles.userName}>
+              {storedName || userInfo.nome || user?.displayName || "Usuário"}
+            </Text>
+            <Text style={styles.userEmail}>
+              {user?.email || "Email não disponível"}
+            </Text>
           </View>
         </View>
-
-        {/* Seção de opções */}
-        <View style={styles.optionsContainer}>
-          <TouchableOpacity
-            style={styles.option}
-            onPress={() => setShowAccountInfo(!showAccountInfo)} // Alterna a visibilidade das informações
-          >
-            <Text style={styles.optionText}>Minha conta</Text>
-            <Icon
-              name={showAccountInfo ? "chevron-up" : "chevron-down"}
-              size={20}
-              color="#000"
-            />
-          </TouchableOpacity>
-
-          {showAccountInfo && (
-            <View style={styles.accountInfoContainer}>
-              <Text style={styles.accountInfoText}>
-                Nome: {userInfo.nome || "Não disponível"}
-              </Text>
-              <TouchableOpacity onPress={() => setShowHelpModal(true)}>
-                <Text
-                  style={[
-                    styles.accountInfoText,
-               
-                  ]}
-                >
-                  Email: {user?.email || "Não disponível"}
-                </Text>
-              </TouchableOpacity>
-
-              {/* Frase clicável para deletar conta */}
-              <TouchableOpacity onPress={() => setShowDeleteModal(true)}>
-                <Text
-                  style={[
-                    styles.accountInfoText,
-                    { color: "red", textDecorationLine: "underline", marginTop: 10 },
-                  ]}
-                >
-                  Deseja deletar essa conta?
-                </Text>
-              </TouchableOpacity>
-            </View>
-          )}
-        </View>
-
         <TouchableOpacity
           style={styles.option}
-          onPress={() => setShowHelpModal(true)} // Mostra o modal de ajuda
+          onPress={() => setShowHelpModal(true)}
         >
           <Text style={styles.optionText}>Ajuda e suporte</Text>
-          <Icon name="chevron-right" size={20} color="#000" />
         </TouchableOpacity>
-
-        <TouchableOpacity style={styles.option}>
-          <Text style={styles.optionText}>Termos e condições</Text>
-          <Icon name="chevron-right" size={20} color="#000" />
+        <TouchableOpacity
+          style={styles.option}
+          onPress={() => setShowAccountModal(true)}
+        >
+          <Text style={styles.optionText}>Minha Conta</Text>
         </TouchableOpacity>
-
         <TouchableOpacity onPress={logout} style={styles.option}>
           <Text style={[styles.optionText, styles.logoutText]}>Sair da conta</Text>
-          <Icon name="chevron-right" size={20} color="#000" />
         </TouchableOpacity>
-
-        {/* Link para deletar conta */}
-       
       </ScrollView>
 
-      {/* Modal de Ajuda e Suporte */}
       <Modal
         visible={showHelpModal}
         transparent={true}
@@ -196,274 +138,190 @@ const Perfil = () => {
       >
         <View style={styles.modalContainer}>
           <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Ajuda e Suporte</Text>
-            <Text style={styles.modalText}> Estamos aqui para ajudar! Se você tiver alguma dúvida, solicite suporte ou forneça feedback, entre em contato pelo email: </Text>
-            <Text style={[styles.modalText, styles.emailText]}> hortaconnect@gmail.com </Text> 
-            < Text style={styles.modalText}> 
-             Você pode nos seguir em nossas redes sociais para ficar por dentro das últimas atualizações e novidades.
-              {"\n\n"} Sua satisfação é nossa prioridade, e estamos prontos para ajudar no que for necessário!
-            </Text>
             <TouchableOpacity
-              style={styles.closeButton}
+              style={styles.closeModalButton}
               onPress={() => setShowHelpModal(false)}
             >
-              <Text style={styles.closeButtonText}>Fechar</Text>
+              <Icon name="times" size={24} color="#000" />
             </TouchableOpacity>
-          </View>
-        </View>
-      </Modal>
-
-      {/* Modal de Confirmação para Deletar Conta */}
-      <Modal
-        visible={showDeleteModal}
-        transparent={true}
-        animationType="slide"
-        onRequestClose={() => setShowDeleteModal(false)}
-      >
-        <View style={styles.modalContainer}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Deletar Conta</Text>
-            <Text style={styles.modalText}>
-              Tem certeza que deseja deletar sua conta? Essa ação não pode ser desfeita.
+            <Text style={styles.modalTitle}>Ajuda e Suporte</Text>
+            <Text style={styles.modalText2}>
+              Precisa de ajuda? Entre em contato pelo email:
             </Text>
-            <View style={styles.buttonRow}>
-              <TouchableOpacity
-                style={[styles.closeButton, styles.cancelButton]}
-                onPress={() => setShowDeleteModal(false)}
-              >
-                <Text style={styles.closeButtonText}>Cancelar</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.deleteButton}
-                onPress={confirmDeleteAccount} // Chama a função para deletar a conta
-              >
-                <Text style={styles.deleteButtonText}>Deletar</Text>
-              </TouchableOpacity>
-            </View>
+            <Text style={[styles.modalText, styles.emailText]}>
+              hortaconnect@gmail.com
+            </Text>
           </View>
         </View>
       </Modal>
 
-      {/* Modal de Chat */}
       <Modal
-        visible={showChatModal}
-        transparent={true}
-        animationType="slide"
-        onRequestClose={() => setShowChatModal(false)}
+  visible={showAccountModal}
+  transparent={true}
+  animationType="slide"
+  onRequestClose={() => setShowAccountModal(false)}
+>
+  <View style={styles.modalContainer}>
+    <View style={[styles.modalContent, styles.accountModal]}>
+      <TouchableOpacity
+        style={styles.closeModalButton}
+        onPress={() => setShowAccountModal(false)}
       >
-        <View style={styles.modalContainer}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Chat</Text>
-            <ScrollView style={styles.chatContainer}>
-              {chatHistory.map((chat) => (
-                <Text key={chat.id} style={styles.chatMessage}>
-                  {chat.message}
-                </Text>
-              ))}
-            </ScrollView>
-            <TextInput
-              style={styles.chatInput}
-              placeholder="Digite sua mensagem..."
-              value={chatMessage}
-              onChangeText={setChatMessage}
-            />
-            <View style={styles.buttonRow}>
-              <TouchableOpacity
-                style={styles.sendButton}
-                onPress={sendMessage} // Envia a mensagem ao chat
-              >
-                <Text style={styles.sendButtonText}>Enviar</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.closeButton}
-                onPress={() => setShowChatModal(false)}
-              >
-                <Text style={styles.closeButtonText}>Fechar</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-      </Modal>
+        <Icon name="times" size={24} color="#000" />
+      </TouchableOpacity>
+      <Text style={styles.modalTitle}>Minha Conta</Text>
+
+      {/* Campos editáveis */}
+      <Text style={styles.modalText}>Nome:</Text>
+      <TextInput
+        style={styles.input}
+        value={userInfo.nome}
+        onChangeText={(text) =>
+          setUserInfo((prev) => ({ ...prev, nome: text }))
+        }
+      />
+
+      <Text style={styles.modalText}>Email:</Text>
+      <TextInput
+        style={styles.input}
+        value={user?.email || ""}
+        editable={false} // Email geralmente não pode ser editado
+      />
+
+      <Text style={styles.modalText}>CEP:</Text>
+      <TextInput
+        style={styles.input}
+        value={userInfo.cidade || ""}
+        onChangeText={(text) =>
+          setUserInfo((prev) => ({ ...prev, cidade: text }))
+        }
+      />
+
+      <Text style={styles.modalText}>Senha:</Text>
+      <TextInput
+        style={styles.input}
+        value={userInfo.senha ? maskPassword(userInfo.senha) : ""}
+        secureTextEntry={true}
+        onChangeText={(text) =>
+          setUserInfo((prev) => ({ ...prev, senha: text }))
+        }
+      />
+
+      {/* Botão para salvar as alterações */}
+      <TouchableOpacity
+        style={styles.saveButton}
+        onPress={() => {
+          // Lógica para salvar alterações
+          console.log("Dados salvos:", userInfo);
+          setShowAccountModal(false);
+        }}
+      >
+        <Text style={styles.saveButtonText}>Salvar Alterações</Text>
+      </TouchableOpacity>
+    </View>
+  </View>
+</Modal>
+
+
     </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#ffffff",
-  },
-  header: {
-    backgroundColor: "#35992B",
-    padding: 20,
-    height: 120,
-    width: '100%',
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
-  headerIcons: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    width: '100%',
-  },
-  headerTitle: {
-    fontSize: 24,
-    fontWeight: "bold",
-    color: "#333",
-    textAlign: "center",
-    marginTop: 16,
-  },
-  profileContainer: {
-    alignItems: "center",
-    marginVertical: 16,
-  },
-  profileImage: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    marginBottom: 16,
-  },
-  userInfoContainer: {
-    alignItems: "center",
-  },
-  userName: {
-    fontSize: 18,
-    fontWeight: "bold",
-  },
-  userEmail: {
-    fontSize: 16,
-    color: "#888",
-  },
-  optionsContainer: {
-    marginTop: 16,
-    paddingHorizontal: 16,
-  },
+  container: { flex: 1, backgroundColor: "#ffffff" },
+  header: { backgroundColor: "#35992B", padding: 20, height: 120 },
+  headerIcons: { flexDirection: "row", justifyContent: "space-between" },
+  profileContainer: { alignItems: "center", marginVertical: 16 },
+  profileImage: { width: 100, height: 100, borderRadius: 50 },
+  userInfoContainer: { alignItems: "center" },
+  userName: { fontSize: 18, fontWeight: "bold" },
+  userEmail: { fontSize: 16, color: "#888" },
   option: {
     backgroundColor: "#FFF",
     padding: 16,
     borderRadius: 8,
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
     marginBottom: 8,
-    borderWidth: 1,
-    borderColor: "#ddd",
-    width: "100%",
   },
-  optionText: {
-    fontSize: 16,
-    fontWeight: "bold",
-  },
-  logoutText: {
-    color: "red",
-  },
-  deleteText: {
-    color: "red",
-  },
-  accountInfoContainer: {
-    backgroundColor: "#FFF",
-    padding: 16,
-    borderRadius: 8,
-    marginTop: 8,
-    marginBottom: 20,
-    borderWidth: 1,
-    borderColor: "#ddd",
-  },
-  accountInfoText: {
-    fontSize: 14,
-    color: "#888",
-    marginBottom: 4,
-  },
-  scrollViewContent: {
-    padding: 16,
-  },
+  optionText: { fontSize: 16, fontWeight: "bold" },
+  logoutText: { color: "red" },
   modalContainer: {
     flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    justifyContent: "flex-end",
   },
   modalContent: {
-    backgroundColor: "#FFF",
+    width: "100%",
+    backgroundColor: "#fff",
     padding: 20,
-    borderRadius: 10,
-    width: "80%",
-    alignItems: "center",
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: -3 },
+    shadowOpacity: 0.1,
+    shadowRadius: 5,
+    elevation: 10,
+  },
+  accountModal: {
+    height: "70%",
+    justifyContent: "flex-start",
+    paddingBottom: 20,
   },
   modalTitle: {
-    fontSize: 18,
+    fontSize: 25,
     fontWeight: "bold",
-    marginBottom: 16,
+    marginTop: 20,
+    marginBottom: 25,
+    color: "#35992B",
+    textAlign: "center",
   },
   modalText: {
+    fontSize: 18,
+    marginBottom: 10,
+    marginTop: 10,
+    color: "#333",
+    textAlign: "left",
+  },
+  modalText2: {
     fontSize: 16,
-    marginBottom: 16,
-    textAlign: "center",
-  },
-  closeButton: {
-    backgroundColor: "#4CAF50",
-    padding: 10,
-    borderRadius: 8,
-    marginTop: 10,
-  },
-  closeButtonText: {
-    color: "#FFF",
-    fontWeight: "bold",
-    textAlign: "center",
-  },
-  cancelButton: {
-    backgroundColor: "gray",
-    marginRight: 10,
-  },
-  buttonRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    width: "100%",
-    marginTop: 10,
-  },
-  deleteButton: {
-    backgroundColor: "red",
-    padding: 10,
-    borderRadius: 8,
-  },
-  deleteButtonText: {
-    color: "#FFF",
-    fontWeight: "bold",
-    textAlign: "center",
-  },
-  chatContainer: {
-    maxHeight: 200,
-    width: "100%",
     marginBottom: 10,
+    marginTop: 10,
+    color: "#333",
+    textAlign: "center",
   },
-  chatMessage: {
-    backgroundColor: "#f1f1f1",
-    padding: 10,
-    borderRadius: 8,
-    marginBottom: 5,
-    alignSelf: "flex-start",
-    maxWidth: "80%",
+
+  emailText:{
+    color: "#FFC222",
+    fontWeight: "bold",
+    textDecorationLine: "underline",
+    textAlign: "center",
   },
-  chatInput: {
+  modalDivider: {
+    height: 1,
+    backgroundColor: "#ccc",
+    marginVertical: 10,
+  },
+  input: {
     borderWidth: 1,
-    borderColor: "#ddd",
-    padding: 10,
+    borderColor: "#ccc",
     borderRadius: 8,
-    width: "100%",
+    padding: 10,
     marginBottom: 10,
+    fontSize: 16,
+    backgroundColor: "#f9f9f9",
   },
-  sendButton: {
-    backgroundColor: "#4CAF50",
-    padding: 10,
+  saveButton: {
+    backgroundColor: "#35992B",
+    padding: 16,
     borderRadius: 8,
-    marginRight: 10,
+    marginTop: 20,
+    alignItems: "center",
   },
-  sendButtonText: {
-    color: "#FFF",
+  saveButtonText: {
+    color: "#fff",
     fontWeight: "bold",
-    textAlign: "center",
+    fontSize: 16,
   },
+  
+  closeModalButton: { position: "absolute", top: 10, right: 10 },
 });
 
 export default Perfil;

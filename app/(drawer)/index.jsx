@@ -26,14 +26,23 @@ const Home = () => {
     const fetchUserName = async () => {
       const auth = getAuth();
       const user = auth.currentUser;
+  
       if (user) {
-        const fullName = user.displayName || user.email;
-        const firstName = fullName.split(" ")[0];
+        let fullName = user.displayName;
+  
+        // Se displayName não existir, usa o email como fallback
+        if (!fullName) {
+          fullName = user.email.split("@")[0]; // Pega a parte antes do '@' do email
+        }
+  
+        const firstName = fullName.split(" ")[0]; // Pega o primeiro nome
         setUserName(firstName);
       }
     };
+  
     fetchUserName();
   }, []);
+  
 
   const renderItem = ({ item, index }) => (
     <View
