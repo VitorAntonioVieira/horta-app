@@ -29,7 +29,7 @@ const SignUp = () => {
       const user = userCredential.user;
 
       const db = getFirestore(app);
-      const clientesCollection = collection(db, "clientes");
+      const clientesCollection = collection(db, "usuarios");
 
       await addDoc(clientesCollection, {
         uid: user.uid,
@@ -40,7 +40,6 @@ const SignUp = () => {
 
       // Armazene o nome no AsyncStorage
       await AsyncStorage.setItem("userName", name);
-
       Alert.alert("Sucesso", "Usuário cadastrado com sucesso!");
       router.back();
     } catch (error) {
