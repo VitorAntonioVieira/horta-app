@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "HortaConnect",
-    "slug": "HortaConnect",
+    "slug": "hortaconnect",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/logo.png",
@@ -17,7 +17,7 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/images/adaptive-icon.png",
+        "foregroundImage": "./assets/images/play_store_512.png",
         "backgroundColor": "#35992B"
       },
       "package": "com.vitorantonio.hortaconnect"
